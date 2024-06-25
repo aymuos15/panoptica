@@ -8,7 +8,7 @@ from panoptica.metrics import Metric, _Metric
 from panoptica.panoptic_result import PanopticaResult
 from panoptica.timing import measure_time
 from panoptica.utils import EdgeCaseHandler
-from panoptica.utils.citation_reminder import citation_reminder
+# from panoptica.utils.citation_reminder import citation_reminder
 from panoptica.utils.processing_pair import (
     MatchedInstancePair,
     SemanticPair,
@@ -58,9 +58,9 @@ class Panoptic_Evaluator:
             ), "decision metric set but no decision threshold for it"
         #
         self.__log_times = log_times
-        self.__verbose = verbose
+        self.__verbose = False
 
-    @citation_reminder
+    # @citation_reminder
     @measure_time
     def evaluate(
         self,
