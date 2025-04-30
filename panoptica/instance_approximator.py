@@ -12,8 +12,6 @@ from panoptica.utils.processing_pair import (
     UnmatchedInstancePair,
 )
 from panoptica.utils.config import SupportsConfig
-
-# Add LabelGroup import
 from panoptica.utils.label_group import LabelGroup, LabelPartGroup
 
 
