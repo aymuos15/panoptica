@@ -110,8 +110,8 @@ class Panoptica_Evaluator(SupportsConfig):
             "verbose": node.__verbose,
         }
 
-    # @citation_reminder
-    # @measure_time
+    @citation_reminder
+    @measure_time
     def evaluate(
         self,
         prediction_arr: np.ndarray,
@@ -285,7 +285,7 @@ def panoptic_evaluate(
     # Setup IntermediateStepsData
     intermediate_steps_data: IntermediateStepsData = IntermediateStepsData(input_pair)
     # Crops away unecessary space of zeroes
-    # input_pair.crop_data()
+    input_pair.crop_data()
 
     processing_pair_orig_shape = (
         input_pair.prediction_arr.shape
