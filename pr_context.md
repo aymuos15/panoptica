@@ -6,15 +6,6 @@ Inherently, Panoptica does everything classwise. In order to make the "Part Sett
 
 This was challenging because we have to maintain a strucutre which works well for the matching (this needs the information about both the classes), and the final "Class" scores (needs single class information). **This was why I chose to pass the Labelgroup information everywhere.** 
 
-As of now, the matching, TP, FP and FN values work as intended. But the global scores for this `PartLabelGroup` class (discussed below) is sending in multilabel values but https://github.com/BrainLesion/panoptica/blob/6dd4ab2b6cd0794491ecb4c84265f3295317346f/panoptica/panoptica_result.py#L19 needs binary. 
-
-## ***Primary Discussion Point***: One of the following 3 can happen: 
-
-1. Do we adopt all metrics to multilabel just for this? 
-        - This should not take too long to do, even with setting up tests. It may also set up a nice scheme to add in-house tests and comparison for "non matching based metrics". I am aware panoptica already does that inherently.
-2. Do we build a seperate evaluator and result class just for Part cases?
-3. or, is my entire structure faulty right now?
-
 Note: Although not present in brats, *I am yet to test for multiple parts of different classes within a thing*. The code should work for it as is but I have not tested for it.
 
 # Discussing the current state of the potential PR
