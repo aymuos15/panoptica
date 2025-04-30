@@ -192,6 +192,7 @@ def _round_to_n(value: float | int, n_significant_digits: int = 2):
         )
     )
 
+
 def _calc_matching_metric_of_overlapping_partlabels(
     prediction_arr: np.ndarray,
     reference_arr: np.ndarray,
@@ -201,8 +202,12 @@ def _calc_matching_metric_of_overlapping_partlabels(
 ) -> list[tuple[float, tuple[int, int]]]:
     """Calculates a combined matching metric for thing+part overlapping labels."""
     ref_labels = list(ref_labels)
-    prediction_arr = _get_orig_onehotcc_structure(prediction_arr, len(ref_labels), processing_pair_orig_shape)
-    reference_arr = _get_orig_onehotcc_structure(reference_arr, len(ref_labels), processing_pair_orig_shape)
+    prediction_arr = _get_orig_onehotcc_structure(
+        prediction_arr, len(ref_labels), processing_pair_orig_shape
+    )
+    reference_arr = _get_orig_onehotcc_structure(
+        reference_arr, len(ref_labels), processing_pair_orig_shape
+    )
 
     overlapping_labels = _calc_overlapping_labels(
         prediction_arr=prediction_arr[1],
@@ -216,7 +221,10 @@ def _calc_matching_metric_of_overlapping_partlabels(
     ]
 
     thing_pairs = [
-        (matching_metric.value(reference_arr[1], prediction_arr[1], i[0], i[1]), (i[0], i[1]))
+        (
+            matching_metric.value(reference_arr[1], prediction_arr[1], i[0], i[1]),
+            (i[0], i[1]),
+        )
         for i in overlapping_labels
     ]
 
@@ -237,11 +245,15 @@ def _calc_matching_metric_of_overlapping_partlabels(
             encompassed_pred_parts = []
             encompassed_ref_parts = []
 
-            for pred_part_instance, ref_part_instance in zip(np.unique(pred_part_slice), np.unique(ref_part_slice)):
+            for pred_part_instance, ref_part_instance in zip(
+                np.unique(pred_part_slice), np.unique(ref_part_slice)
+            ):
                 curr_pred_part_instance = pred_part_slice == (pred_part_instance + 1)
                 curr_ref_part_instance = ref_part_slice == (ref_part_instance + 1)
 
-                if _is_part_encompassed(curr_pred_part_instance, matched_pred_component):
+                if _is_part_encompassed(
+                    curr_pred_part_instance, matched_pred_component
+                ):
                     encompassed_pred_parts.append(pred_part_instance)
 
                 if _is_part_encompassed(curr_ref_part_instance, matched_ref_component):
@@ -250,14 +262,18 @@ def _calc_matching_metric_of_overlapping_partlabels(
             if len(encompassed_pred_parts) > 1:
                 lowest_label = min(encompassed_pred_parts)
                 highest_label = max(encompassed_pred_parts)
-                pred_part_slice[pred_part_slice == (highest_label + 1)] = lowest_label + 1
+                pred_part_slice[pred_part_slice == (highest_label + 1)] = (
+                    lowest_label + 1
+                )
 
             if len(encompassed_ref_parts) > 1:
                 lowest_label = min(encompassed_ref_parts)
                 highest_label = max(encompassed_ref_parts)
                 ref_part_slice[ref_part_slice == (highest_label + 1)] = lowest_label + 1
 
-        ref_unique_labels = [int(label) for label in np.unique(ref_part_slice) if label > 0]
+        ref_unique_labels = [
+            int(label) for label in np.unique(ref_part_slice) if label > 0
+        ]
         all_part_labels = calculate_all_label_pairs(
             prediction_arr=pred_part_slice,
             reference_arr=ref_part_slice,
@@ -266,9 +282,7 @@ def _calc_matching_metric_of_overlapping_partlabels(
 
         curr_part_pairs = [
             (
-                matching_metric.value(
-                    ref_part_slice, pred_part_slice, i[0], i[1]
-                ),
+                matching_metric.value(ref_part_slice, pred_part_slice, i[0], i[1]),
                 (i[0], i[1]),
             )
             for i in all_part_labels
@@ -289,7 +303,11 @@ def _calc_matching_metric_of_overlapping_partlabels(
         def _update_thing_pairs_with_part_scores(thing_pairs, part_pairs):
             part_scores = {pair: score for score, pair in part_pairs}
             return [
-                ((score + part_scores[pair]) / 2, pair) if pair in part_scores else (score, pair)
+                (
+                    ((score + part_scores[pair]) / 2, pair)
+                    if pair in part_scores
+                    else (score, pair)
+                )
                 for score, pair in thing_pairs
             ]
 
@@ -299,6 +317,7 @@ def _calc_matching_metric_of_overlapping_partlabels(
         )
 
     return updated_thing_pairs
+
 
 def _is_part_encompassed(part_component: np.ndarray, thing_mask: np.ndarray) -> bool:
     """Checks if a part is encompassed by the thing label.
@@ -328,13 +347,15 @@ def _is_part_encompassed(part_component: np.ndarray, thing_mask: np.ndarray) -> 
 
         # If all boundary pixels are thing pixels, the part is surrounded
         return np.all((boundary & thing_mask) == boundary)
-    
+
+
 def _get_orig_onehotcc_structure(
     arr_onehot: np.ndarray,
     num_ref_labels: int,
     processing_pair_orig_shape: tuple[int, ...],
 ) -> np.ndarray:
-        return arr_onehot.reshape((num_ref_labels + 1,) + processing_pair_orig_shape)
+    return arr_onehot.reshape((num_ref_labels + 1,) + processing_pair_orig_shape)
+
 
 def _remove_isolated_parts(
     array: np.ndarray, thing_label: int, part_labels: list[int]
@@ -396,6 +417,10 @@ def calculate_all_label_pairs(
     # Get non-zero prediction and reference labels
     pred_labels = [int(label) for label in np.unique(prediction_arr) if label > 0]
     ref_labels = [int(label) for label in ref_labels if label > 0]
-    
+
     # Create all possible pairs using list comprehension
-    return [(ref_label, pred_label) for ref_label in ref_labels for pred_label in pred_labels]
+    return [
+        (ref_label, pred_label)
+        for ref_label in ref_labels
+        for pred_label in pred_labels
+    ]

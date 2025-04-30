@@ -189,7 +189,7 @@ class ConnectedComponentsInstanceApproximator(InstanceApproximator):
             n_prediction_instance=n_prediction_instance,
             n_reference_instance=n_reference_instance,
         )
-        
+
     @classmethod
     def _yaml_repr(cls, node) -> dict:
         return {"cca_backend": node.cca_backend}
