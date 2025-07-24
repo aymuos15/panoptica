@@ -1,5 +1,10 @@
-from auxiliary.io import read_image
-from auxiliary.turbopath import turbopath
+from pathlib import Path
+import numpy as np
+from panoptica.utils.input_check_and_conversion.check_nibabel_image import load_nibabel_image
+
+def read_nifti_as_numpy(path):
+    nib_image = load_nibabel_image(path)
+    return np.asanyarray(nib_image.dataobj, dtype=nib_image.dataobj.dtype).copy()
 import os
 import cpuinfo
 import json
@@ -22,10 +27,10 @@ import csv
 
 import pandas as pd
 
-directory = turbopath(__file__).parent.parent
+directory = Path(__file__).parent.parent
 
-ref_masks = read_image(directory + "/examples/spine_seg/semantic/ref.nii.gz")
-pred_masks = read_image(directory + "/examples/spine_seg/semantic/pred.nii.gz")
+ref_masks = read_nifti_as_numpy(directory + "/examples/spine_seg/semantic/ref.nii.gz")
+pred_masks = read_nifti_as_numpy(directory + "/examples/spine_seg/semantic/pred.nii.gz")
 
 platform_name = "ryzen9_new"
 

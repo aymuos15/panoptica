@@ -54,10 +54,15 @@ A minimal example of using panoptica could look e.g. like this (here with Matche
 from panoptica import InputType, Panoptica_Evaluator
 from panoptica.metrics import Metric
 
-from auxiliary.io import read_image # feel free to use any other way to read nifti files
+import numpy as np
+from panoptica.utils.input_check_and_conversion.check_nibabel_image import load_nibabel_image
 
-ref_masks = read_image("reference.nii.gz")
-pred_masks = read_image("prediction.nii.gz")
+def read_nifti_as_numpy(path):
+    nib_image = load_nibabel_image(path)
+    return np.asanyarray(nib_image.dataobj, dtype=nib_image.dataobj.dtype).copy()
+
+ref_masks = read_nifti_as_numpy("reference.nii.gz")
+pred_masks = read_nifti_as_numpy("prediction.nii.gz")
 
 evaluator = Panoptica_Evaluator(
     expected_input=InputType.MATCHED_INSTANCE,
