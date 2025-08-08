@@ -1,5 +1,5 @@
 from auxiliary.io import read_image
-from auxiliary.turbopath import turbopath
+from pathlib import Path
 import os
 import cpuinfo
 import json
@@ -22,14 +22,14 @@ import csv
 
 import pandas as pd
 
-directory = turbopath(__file__).parent.parent
+directory = Path(__file__).parent.parent
 
-ref_masks = read_image(directory + "/examples/spine_seg/semantic/ref.nii.gz")
-pred_masks = read_image(directory + "/examples/spine_seg/semantic/pred.nii.gz")
+ref_masks = read_image(str(directory / "examples" / "spine_seg" / "semantic" / "ref.nii.gz"))
+pred_masks = read_image(str(directory / "examples" / "spine_seg" / "semantic" / "pred.nii.gz"))
 
 platform_name = "ryzen9_new"
 
-csv_out = directory + "/benchmark/results/" + platform_name + "/performance_"
+csv_out = str(directory / "benchmark" / "results" / platform_name / "performance_")
 
 
 def evaluate_nparray(array, return_as_dict=False, verbose=False):
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     # CPU information
     cpu_dict = cpuinfo.get_cpu_info()
 
-    cpu_json_path = directory + "/benchmark/results/" + platform_name + "/platform.json"
+    cpu_json_path = directory / "benchmark" / "results" / platform_name / "platform.json"
     print("cpu_json_path:", cpu_json_path.parent)
     # os.makedirs(cpu_json_path.parent, exist_ok=True)
 
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         print()
         print()
         print(sample_name)
-        csv_name = csv_out + sample_name + ".csv"
+        csv_name = str(Path(csv_out) / f"{sample_name}.csv")
         with open(csv_name, "w", newline="") as csvfile:
             spamwriter = csv.writer(
                 csvfile, delimiter=";", quotechar="|", quoting=csv.QUOTE_MINIMAL
