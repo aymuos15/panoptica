@@ -4,7 +4,9 @@ from pathlib import Path
 from panoptica.utils.input_check_and_conversion.check_numpy_array import (
     _sanity_check_images,
 )
-from panoptica.utils.input_check_and_conversion.input_data_type_checker import _InputDataTypeChecker
+from panoptica.utils.input_check_and_conversion.input_data_type_checker import (
+    _InputDataTypeChecker,
+)
 
 # Optional sitk import
 _spec = find_spec("torch")
@@ -34,7 +36,9 @@ class TorchImageChecker(_InputDataTypeChecker):
             return None
         return image
 
-    def sanity_check_images(self, prediction_image, reference_image, *args, **kwargs) -> tuple[bool, str]:
+    def sanity_check_images(
+        self, prediction_image, reference_image, *args, **kwargs
+    ) -> tuple[bool, str]:
         # assert correct datatype
         assert isinstance(prediction_image, torch.Tensor) and isinstance(
             reference_image, torch.Tensor

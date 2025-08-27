@@ -1,12 +1,15 @@
 import numpy as np
 from importlib.util import find_spec
 from pathlib import Path
-from panoptica.utils.input_check_and_conversion.input_data_type_checker import _InputDataTypeChecker
+from panoptica.utils.input_check_and_conversion.input_data_type_checker import (
+    _InputDataTypeChecker,
+)
 
 # Optional sitk import
 spec = find_spec("nrrd")
 if spec is not None:
     import nrrd
+
 
 class NRRDImage:
     """
@@ -83,17 +86,27 @@ class NRRDImageChecker(_InputDataTypeChecker):
             return None
         return NRRDImage(readdata, header)
 
-    def sanity_check_images(self, prediction_image: NRRDImage, reference_image: NRRDImage, *args, **kwargs) -> tuple[bool, str]:
+    def sanity_check_images(
+        self, prediction_image: NRRDImage, reference_image: NRRDImage, *args, **kwargs
+    ) -> tuple[bool, str]:
         # assert correct datatype
-        assert isinstance(prediction_image, NRRDImage) and isinstance(reference_image, NRRDImage), "Input images must be of type NRRD_IMAGE"
+        assert isinstance(prediction_image, NRRDImage) and isinstance(
+            reference_image, NRRDImage
+        ), "Input images must be of type NRRD_IMAGE"
         # start necessary comparisons
         # dimensions need to be exact
         if prediction_image.shape != reference_image.shape:
-            return False, "Dimension Mismatch: {} vs {}".format(prediction_image.shape, reference_image.shape)
+            return False, "Dimension Mismatch: {} vs {}".format(
+                prediction_image.shape, reference_image.shape
+            )
 
         # check if the affine matrices are similar
-        if (np.array(prediction_image.affine) - np.array(reference_image.affine)).sum() > self.threshold:
-            return False, "Affine Mismatch: {} vs {}".format(prediction_image.affine, reference_image.affine)
+        if (
+            np.array(prediction_image.affine) - np.array(reference_image.affine)
+        ).sum() > self.threshold:
+            return False, "Affine Mismatch: {} vs {}".format(
+                prediction_image.affine, reference_image.affine
+            )
 
         return True, ""
 

@@ -1,7 +1,9 @@
 import numpy as np
 from importlib.util import find_spec
 from pathlib import Path
-from panoptica.utils.input_check_and_conversion.input_data_type_checker import _InputDataTypeChecker
+from panoptica.utils.input_check_and_conversion.input_data_type_checker import (
+    _InputDataTypeChecker,
+)
 
 # Optional sitk import
 spec = find_spec("nibabel")
@@ -52,14 +54,20 @@ class NibabelImageChecker(_InputDataTypeChecker):
         if prediction_image.shape != reference_image.shape:
             return (
                 False,
-                "Dimension Mismatch: {} vs {}".format(prediction_image.shape, reference_image.shape),
+                "Dimension Mismatch: {} vs {}".format(
+                    prediction_image.shape, reference_image.shape
+                ),
             )
 
         # check if the affine matrices are similar
-        if (np.array(prediction_image.affine) - np.array(reference_image.affine)).sum() > threshold:
+        if (
+            np.array(prediction_image.affine) - np.array(reference_image.affine)
+        ).sum() > threshold:
             return (
                 False,
-                "Affine Mismatch: {} vs {}".format(prediction_image.affine, reference_image.affine),
+                "Affine Mismatch: {} vs {}".format(
+                    prediction_image.affine, reference_image.affine
+                ),
             )
 
         return True, ""

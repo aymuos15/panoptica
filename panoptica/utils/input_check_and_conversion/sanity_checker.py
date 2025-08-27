@@ -88,17 +88,27 @@ def sanity_check_and_convert_to_array(
             if is_path and file_ending in checker.supported_file_endings:
                 r, msg, (pred, ref) = checker(prediction, reference)
                 if not r:
-                    raise ValueError(f"Sanity check failed for {inputdtype.name}: {msg}. Please check the input files.")
-                return convert_to_numpy_array_and_extract_metadata(pred, ref, checker), inputdtype
+                    raise ValueError(
+                        f"Sanity check failed for {inputdtype.name}: {msg}. Please check the input files."
+                    )
+                return (
+                    convert_to_numpy_array_and_extract_metadata(pred, ref, checker),
+                    inputdtype,
+                )
             elif not is_path:
                 try:
                     r, msg, (pred, ref) = checker(prediction, reference)
                 except AssertionError as e:
                     continue
                 if not r:
-                    raise ValueError(f"Sanity check failed for {inputdtype.name}: {msg}. Please check the input files.")
+                    raise ValueError(
+                        f"Sanity check failed for {inputdtype.name}: {msg}. Please check the input files."
+                    )
                 else:
-                    return convert_to_numpy_array_and_extract_metadata(pred, ref, checker), inputdtype
+                    return (
+                        convert_to_numpy_array_and_extract_metadata(pred, ref, checker),
+                        inputdtype,
+                    )
         elif is_path and file_ending in checker.supported_file_endings:
             missing_package_for_this.append(checker)
     if len(missing_package_for_this) > 0:
@@ -156,7 +166,9 @@ def post_check(
         min_value >= 0
     ), "There are negative values in the segmentation maps. This is not allowed!"
 
-    if not np.issubdtype(prediction_array.dtype, np.integer) or not np.issubdtype(reference_array.dtype, np.integer):
+    if not np.issubdtype(prediction_array.dtype, np.integer) or not np.issubdtype(
+        reference_array.dtype, np.integer
+    ):
         warn(
             "The input arrays are not of integer type. This may lead to unexpected behavior in the segmentation maps.",
             UserWarning,

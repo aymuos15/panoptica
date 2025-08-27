@@ -103,7 +103,9 @@ def _evaluate_instance(
             # collapse voxelspacing by multiplication
             voxelspacing = (np.prod(voxelspacing),)
         else:
-            raise ValueError(f"voxelspacing length {len(voxelspacing)} does not match reference array dimension {reference_arr.ndim}")
+            raise ValueError(
+                f"voxelspacing length {len(voxelspacing)} does not match reference array dimension {reference_arr.ndim}"
+            )
 
     if ref_arr.sum() == 0 or pred_arr.sum() == 0:
         return {}

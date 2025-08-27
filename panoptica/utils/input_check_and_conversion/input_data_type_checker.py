@@ -4,6 +4,7 @@ import numpy as np
 from abc import abstractmethod
 from pathlib import Path
 
+
 def _is_package_available(package_name: str) -> bool:
     """
     Check if a package is available in the current environment.
@@ -76,7 +77,9 @@ class _InputDataTypeChecker:
         """
         return len(self.__missing_packages) == 0
 
-    def __call__(self, prediction, reference, **kwargs) -> tuple[bool, str, tuple[object, object]]:
+    def __call__(
+        self, prediction, reference, **kwargs
+    ) -> tuple[bool, str, tuple[object, object]]:
 
         # load from path if necessary
         if isinstance(prediction, (str, Path)):
@@ -84,7 +87,9 @@ class _InputDataTypeChecker:
         if isinstance(reference, (str, Path)):
             reference = self.load_image_from_path(reference)
 
-        assert prediction is not None and reference is not None, "Could not load images from the given paths."
+        assert (
+            prediction is not None and reference is not None
+        ), "Could not load images from the given paths."
 
         c, msg = self.sanity_check_images(prediction, reference)
         return c, msg, (prediction, reference)
@@ -94,7 +99,9 @@ class _InputDataTypeChecker:
         pass
 
     @abstractmethod
-    def sanity_check_images(self, prediction_image, reference_image, *args, **kwargs) -> tuple[bool, str]:
+    def sanity_check_images(
+        self, prediction_image, reference_image, *args, **kwargs
+    ) -> tuple[bool, str]:
         pass
 
     @abstractmethod
