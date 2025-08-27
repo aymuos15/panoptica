@@ -469,6 +469,7 @@ def panoptic_evaluate(
             global_metrics=global_metrics,
             edge_case_handler=edge_case_handler,
             intermediate_steps_data=intermediate_steps_data,
+            **kwargs,
         )
 
     if isinstance(processing_pair, PanopticaResult):
