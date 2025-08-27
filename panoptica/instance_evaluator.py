@@ -96,9 +96,14 @@ def _evaluate_instance(
     ref_arr = reference_arr == ref_idx
     pred_arr = prediction_arr == ref_idx
 
-    voxelspacing = (
-        (1.0,) * len(reference_arr.shape) if voxelspacing is None else voxelspacing
-    )
+    voxelspacing = (1.0,) * reference_arr.ndim if voxelspacing is None else voxelspacing
+
+    if len(voxelspacing) != reference_arr.ndim:
+        if reference_arr.ndim == 1:
+            # collapse voxelspacing by multiplication
+            voxelspacing = (np.prod(voxelspacing),)
+        else:
+            raise ValueError(f"voxelspacing length {len(voxelspacing)} does not match reference array dimension {reference_arr.ndim}")
 
     if ref_arr.sum() == 0 or pred_arr.sum() == 0:
         return {}
