@@ -18,7 +18,9 @@ class NumpyImageChecker(_InputDataTypeChecker):
     def load_image_from_path(self, image_path: str | Path) -> np.ndarray:
         return np.load(image_path)
 
-    def sanity_check_images(self, prediction_image: np.ndarray, reference_image: np.ndarray, *args, **kwargs) -> tuple[bool, str]:
+    def sanity_check_images(
+        self, prediction_image: np.ndarray, reference_image: np.ndarray, *args, **kwargs
+    ) -> tuple[bool, str]:
         return _sanity_check_images(prediction_image, reference_image)
 
     def convert_to_numpy_array(self, image: np.ndarray) -> np.ndarray:
@@ -31,7 +33,9 @@ class NumpyImageChecker(_InputDataTypeChecker):
         return {}
 
 
-def _sanity_check_images(prediction_image: np.ndarray, reference_image: np.ndarray, *args, **kwargs) -> tuple[bool, str]:
+def _sanity_check_images(
+    prediction_image: np.ndarray, reference_image: np.ndarray, *args, **kwargs
+) -> tuple[bool, str]:
     # assert correct datatype
     assert isinstance(prediction_image, np.ndarray) and isinstance(
         reference_image, np.ndarray
@@ -39,6 +43,8 @@ def _sanity_check_images(prediction_image: np.ndarray, reference_image: np.ndarr
 
     # dimensions need to be exact
     if prediction_image.shape != reference_image.shape:
-        return False, "Dimension Mismatch: {} vs {}".format(prediction_image.shape, reference_image.shape)
+        return False, "Dimension Mismatch: {} vs {}".format(
+            prediction_image.shape, reference_image.shape
+        )
 
     return True, ""
