@@ -36,7 +36,9 @@ class TorchImageChecker(_InputDataTypeChecker):
             return None
         return image
 
-    def sanity_check_images(self, prediction_image, reference_image, *args, **kwargs) -> tuple[bool, str]:
+    def sanity_check_images(
+        self, prediction_image, reference_image, *args, **kwargs
+    ) -> tuple[bool, str]:
         # assert correct datatype
         assert isinstance(prediction_image, torch.Tensor) and isinstance(
             reference_image, torch.Tensor
