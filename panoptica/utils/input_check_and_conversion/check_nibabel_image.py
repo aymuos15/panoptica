@@ -17,6 +17,7 @@ class NibabelImageChecker(_InputDataTypeChecker):
             supported_file_endings=[".nii", ".nii.gz"],
             required_package_names=["nibabel"],
         )
+        self.threshold: float = 1e-5
 
     def load_image_from_path(self, image_path: str | Path) -> nib.Nifti1Image | None:
         try:
@@ -30,7 +31,6 @@ class NibabelImageChecker(_InputDataTypeChecker):
         self,
         prediction_image: nib.Nifti1Image,
         reference_image: nib.Nifti1Image,
-        threshold: float = 1e-5,
         *args,
         **kwargs,
     ) -> tuple[bool, str]:
@@ -54,20 +54,14 @@ class NibabelImageChecker(_InputDataTypeChecker):
         if prediction_image.shape != reference_image.shape:
             return (
                 False,
-                "Dimension Mismatch: {} vs {}".format(
-                    prediction_image.shape, reference_image.shape
-                ),
+                "Dimension Mismatch: {} vs {}".format(prediction_image.shape, reference_image.shape),
             )
 
         # check if the affine matrices are similar
-        if (
-            np.array(prediction_image.affine) - np.array(reference_image.affine)
-        ).sum() > threshold:
+        if (np.array(prediction_image.affine) - np.array(reference_image.affine)).sum() > self.threshold:
             return (
                 False,
-                "Affine Mismatch: {} vs {}".format(
-                    prediction_image.affine, reference_image.affine
-                ),
+                "Affine Mismatch: {} vs {}".format(prediction_image.affine, reference_image.affine),
             )
 
         return True, ""
