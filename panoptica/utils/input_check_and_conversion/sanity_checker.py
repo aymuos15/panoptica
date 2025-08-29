@@ -38,9 +38,7 @@ def print_available_package_to_input_handlers():
         if d.value.are_requirements_fulfilled():
             print(f"{d.name} is available for input handling.")
         else:
-            print(
-                f"{d.name} is not available for input handling. Missing packages: {d.value.missing_packages}"
-            )
+            print(f"{d.name} is not available for input handling. Missing packages: {d.value.missing_packages}")
 
 
 def sanity_check_and_convert_to_array(
@@ -63,12 +61,8 @@ def sanity_check_and_convert_to_array(
     Returns:
         tuple[np.ndarray, np.ndarray], InputDType, dict: Will return the prediction array, reference array, the INPUTDTYPE and any metadata if the sanity check passes, otherwise it raises a corresponding Exception.
     """
-    assert (
-        prediction is not None and reference is not None
-    ), "prediction and reference cannot be None."
-    assert type(prediction) is type(
-        reference
-    ), "prediction and reference must be of the same type."
+    assert prediction is not None and reference is not None, "prediction and reference cannot be None."
+    assert type(prediction) is type(reference), "prediction and reference must be of the same type."
 
     is_path = isinstance(prediction, (str, Path))
     file_ending = None
@@ -88,9 +82,7 @@ def sanity_check_and_convert_to_array(
             if is_path and file_ending in checker.supported_file_endings:
                 r, msg, (pred, ref) = checker(prediction, reference)
                 if not r:
-                    raise ValueError(
-                        f"Sanity check failed for {inputdtype.name}: {msg}. Please check the input files."
-                    )
+                    raise ValueError(f"Sanity check failed for {inputdtype.name}: {msg}. Please check the input files.")
                 return (
                     convert_to_numpy_array_and_extract_metadata(pred, ref, checker),
                     inputdtype,
@@ -101,9 +93,7 @@ def sanity_check_and_convert_to_array(
                 except AssertionError as e:
                     continue
                 if not r:
-                    raise ValueError(
-                        f"Sanity check failed for {inputdtype.name}: {msg}. Please check the input files."
-                    )
+                    raise ValueError(f"Sanity check failed for {inputdtype.name}: {msg}. Please check the input files.")
                 else:
                     return (
                         convert_to_numpy_array_and_extract_metadata(pred, ref, checker),
@@ -112,9 +102,7 @@ def sanity_check_and_convert_to_array(
         elif is_path and file_ending in checker.supported_file_endings:
             missing_package_for_this.append(checker)
     if len(missing_package_for_this) > 0:
-        missing_package_names = [
-            checker.missing_packages for checker in missing_package_for_this
-        ]
+        missing_package_names = [checker.missing_packages for checker in missing_package_for_this]
         raise ImportError(
             f"Missing packages for the given file ending {file_ending}: Any of these sets of packages is missing: {missing_package_names}. Please install the required packages."
         )
@@ -136,9 +124,14 @@ def convert_to_numpy_array_and_extract_metadata(
     np_prediction = checker.convert_to_numpy_array(prediction)
     np_reference = checker.convert_to_numpy_array(reference)
 
-    metadata = checker.extract_metadata_from_image(reference)
+    metadata_ref: dict = checker.extract_metadata_from_image(reference)
+    metadata_pred: dict = checker.extract_metadata_from_image(prediction)
 
-    return post_check(np_prediction, np_reference), metadata
+    assert (
+        metadata_ref == metadata_pred
+    ), f"Metadata of prediction and reference do not match. Got Reference={metadata_ref}, and prediction={metadata_pred}"
+
+    return post_check(np_prediction, np_reference), metadata_ref
 
 
 def post_check(
@@ -162,13 +155,9 @@ def post_check(
         prediction_array.min(),
         reference_array.min(),
     )
-    assert (
-        min_value >= 0
-    ), "There are negative values in the segmentation maps. This is not allowed!"
+    assert min_value >= 0, "There are negative values in the segmentation maps. This is not allowed!"
 
-    if not np.issubdtype(prediction_array.dtype, np.integer) or not np.issubdtype(
-        reference_array.dtype, np.integer
-    ):
+    if not np.issubdtype(prediction_array.dtype, np.integer) or not np.issubdtype(reference_array.dtype, np.integer):
         warn(
             "The input arrays are not of integer type. This may lead to unexpected behavior in the segmentation maps.",
             UserWarning,

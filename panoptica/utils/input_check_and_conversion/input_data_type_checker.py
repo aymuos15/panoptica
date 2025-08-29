@@ -1,7 +1,7 @@
 import sys
 from importlib.util import find_spec
 import numpy as np
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from pathlib import Path
 
 
@@ -29,10 +29,10 @@ def _is_package_available(package_name: str) -> bool:
     return False
 
 
-class _InputDataTypeChecker:
+class _InputDataTypeChecker(ABC):
     """
-    This class is used to define the input data type for the sanity checker.
-    It defines the supporting file endings, required package names, and the sanity check handler
+    This class is used to define an input data type.
+    It defines the supporting file endings, required package names, and the functions for loading images of that data type from a path, converting it to numpy array, extracting metadata and sanity checking the input.
     """
 
     __supported_file_endings: list[str] = []
@@ -77,9 +77,16 @@ class _InputDataTypeChecker:
         """
         return len(self.__missing_packages) == 0
 
-    def __call__(
-        self, prediction, reference, **kwargs
-    ) -> tuple[bool, str, tuple[object, object]]:
+    def __call__(self, prediction, reference, **kwargs) -> tuple[bool, str, tuple[object, object]]:
+        """Tries to load the images of that data type and then checks if they are compatible.
+
+        Args:
+            prediction (_type_): Prediction image or path to prediction image.
+            reference (_type_): Reference image or path to reference image.
+
+        Returns:
+            tuple[bool, str, tuple[object, object]]: A tuple containing a boolean indicating success, an (error) message string, and a tuple of the loaded images.
+        """
 
         # load from path if necessary
         if isinstance(prediction, (str, Path)):
@@ -87,9 +94,7 @@ class _InputDataTypeChecker:
         if isinstance(reference, (str, Path)):
             reference = self.load_image_from_path(reference)
 
-        assert (
-            prediction is not None and reference is not None
-        ), "Could not load images from the given paths."
+        assert prediction is not None and reference is not None, "Could not load images from the given paths."
 
         c, msg = self.sanity_check_images(prediction, reference)
         return c, msg, (prediction, reference)
@@ -99,9 +104,7 @@ class _InputDataTypeChecker:
         pass
 
     @abstractmethod
-    def sanity_check_images(
-        self, prediction_image, reference_image, *args, **kwargs
-    ) -> tuple[bool, str]:
+    def sanity_check_images(self, prediction_image, reference_image, *args, **kwargs) -> tuple[bool, str]:
         pass
 
     @abstractmethod
