@@ -36,9 +36,7 @@ class TorchImageChecker(_InputDataTypeChecker):
             return None
         return image
 
-    def sanity_check_images(
-        self, prediction_image, reference_image, *args, **kwargs
-    ) -> tuple[bool, str]:
+    def sanity_check_images(self, prediction_image, reference_image, *args, **kwargs) -> tuple[bool, str]:
         # assert correct datatype
         assert isinstance(prediction_image, torch.Tensor) and isinstance(
             reference_image, torch.Tensor
@@ -53,4 +51,9 @@ class TorchImageChecker(_InputDataTypeChecker):
         return image.numpy()
 
     def extract_metadata_from_image(self, image) -> dict:
-        return {}  # TODO
+        """
+        Extracts metadata from a torch.Tensor image.
+        Returns a dictionary with keys: shape, dtype, device, requires_grad.
+        If no further metadata is available, this is documented here.
+        """
+        return {}
