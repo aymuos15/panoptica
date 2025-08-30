@@ -59,14 +59,17 @@ class Test_CuPy_Connected_Components(unittest.TestCase):
             result_array, result_n_components = _connected_components(
                 test_array, CCABackend.cupy
             )
-            
+
             # If CuPy is available, verify basic properties
             self.assertEqual(result_array.shape, test_array.shape)
             self.assertGreaterEqual(result_n_components, 0)
-            
-        except ImportError:
-            # CuPy not available, skip this test
-            self.skipTest("CuPy not available for connected components test")
+
+        except (ImportError, Exception) as e:
+            # CuPy not available or CUDA issues, skip this test
+            if "CUDA" in str(e) or "cupy" in str(e).lower():
+                self.skipTest(f"CuPy/CUDA not available for connected components test: {e}")
+            else:
+                raise
 
     def test_cupy_backend_comparison_with_scipy(self):
         """Test that CuPy and SciPy backends produce similar results (when CuPy is available)."""
@@ -133,7 +136,9 @@ class Test_CuPy_Connected_Components(unittest.TestCase):
         except (ImportError, Exception) as e:
             # CuPy not available or CUDA issues, skip this test
             if "CUDA" in str(e) or "cupy" in str(e).lower():
-                self.skipTest(f"CuPy/CUDA not available for instance approximator test: {e}")
+                self.skipTest(
+                    f"CuPy/CUDA not available for instance approximator test: {e}"
+                )
             else:
                 raise
 
@@ -196,7 +201,9 @@ class Test_CuPy_Connected_Components(unittest.TestCase):
                 except (ImportError, Exception) as e:
                     # CuPy not available or CUDA issues
                     if "CUDA" in str(e) or "cupy" in str(e).lower():
-                        self.skipTest(f"CuPy/CUDA not available for shape {shape} test: {e}")
+                        self.skipTest(
+                            f"CuPy/CUDA not available for shape {shape} test: {e}"
+                        )
                     else:
                         raise
 
