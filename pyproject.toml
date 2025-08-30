@@ -23,7 +23,6 @@ exclude = ["examples", "benchmark"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-# Relaxed numpy version to be compatible with CuPy
 numpy = ">=1.22,<2.3"
 connected-components-3d = "^3.12.3"
 scipy = "^1.7.0"
