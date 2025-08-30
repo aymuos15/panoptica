@@ -67,7 +67,9 @@ class Test_CuPy_Connected_Components(unittest.TestCase):
         except (ImportError, Exception) as e:
             # CuPy not available or CUDA issues, skip this test
             if "CUDA" in str(e) or "cupy" in str(e).lower():
-                self.skipTest(f"CuPy/CUDA not available for connected components test: {e}")
+                self.skipTest(
+                    f"CuPy/CUDA not available for connected components test: {e}"
+                )
             else:
                 raise
 
