@@ -426,6 +426,8 @@ def panoptic_evaluate(
             eval_metrics=instance_metrics,
             decision_metric=decision_metric,
             decision_threshold=decision_threshold,
+            processing_pair_orig_shape=instance_metadata["original_shape"],
+            num_ref_labels=instance_metadata["num_ref_labels"],
             **kwargs,
         )
         if log_times:

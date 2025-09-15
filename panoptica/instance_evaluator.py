@@ -3,7 +3,24 @@ import numpy as np
 
 from panoptica.metrics import Metric
 from panoptica.utils.processing_pair import MatchedInstancePair, EvaluateInstancePair
-from panoptica._functionals import _get_paired_crop
+from panoptica._functionals import _get_paired_crop, _get_orig_onehotcc_structure
+
+
+def _is_spatial_metric(metric: Metric) -> bool:
+    """
+    Check if a metric requires spatial structure for meaningful computation.
+
+    Spatial metrics need to operate on arrays with spatial dimensions (not flattened)
+    to compute distances, surfaces, or geometric properties correctly.
+
+    Args:
+        metric: The metric to check
+
+    Returns:
+        bool: True if the metric requires spatial structure
+    """
+    spatial_metrics = {Metric.ASSD, Metric.HD, Metric.HD95, Metric.NSD, Metric.CEDI}
+    return metric in spatial_metrics
 
 
 def evaluate_matched_instance(
@@ -12,6 +29,8 @@ def evaluate_matched_instance(
     decision_metric: Metric | None = Metric.IOU,
     decision_threshold: float | None = None,
     voxelspacing: tuple[float, ...] | None = None,
+    processing_pair_orig_shape: tuple[int, ...] | None = None,
+    num_ref_labels: int | None = None,
     **kwargs,
 ) -> EvaluateInstancePair:
     """
@@ -42,7 +61,13 @@ def evaluate_matched_instance(
 
     metric_dicts: list[dict[Metric, float]] = [
         _evaluate_instance(
-            reference_arr, prediction_arr, ref_idx, eval_metrics, voxelspacing
+            reference_arr,
+            prediction_arr,
+            ref_idx,
+            eval_metrics,
+            voxelspacing,
+            processing_pair_orig_shape,
+            num_ref_labels,
         )
         for ref_idx in ref_matched_labels
     ]
@@ -80,6 +105,8 @@ def _evaluate_instance(
     ref_idx: int,
     eval_metrics: list[Metric],
     voxelspacing: tuple[float, ...] | None = None,
+    processing_pair_orig_shape: tuple[int, ...] | None = None,
+    num_ref_labels: int | None = None,
 ) -> dict[Metric, float]:
     """
     Evaluate a single instance.
@@ -96,16 +123,19 @@ def _evaluate_instance(
     ref_arr = reference_arr == ref_idx
     pred_arr = prediction_arr == ref_idx
 
-    voxelspacing = (1.0,) * reference_arr.ndim if voxelspacing is None else voxelspacing
+    # Detect if we have flattened one-hot arrays that need reshaping for spatial metrics
+    is_flattened_onehot = (
+        reference_arr.ndim == 1
+        and processing_pair_orig_shape is not None
+        and num_ref_labels is not None
+    )
 
-    if len(voxelspacing) != reference_arr.ndim:
-        if reference_arr.ndim == 1:
-            # collapse voxelspacing by multiplication
-            voxelspacing = (np.prod(voxelspacing),)
+    # Set default voxelspacing based on original or current array dimensions
+    if voxelspacing is None:
+        if is_flattened_onehot:
+            voxelspacing = (1.0,) * len(processing_pair_orig_shape)
         else:
-            raise ValueError(
-                f"voxelspacing length {len(voxelspacing)} does not match reference array dimension {reference_arr.ndim}"
-            )
+            voxelspacing = (1.0,) * reference_arr.ndim
 
     if ref_arr.sum() == 0 or pred_arr.sum() == 0:
         return {}
@@ -121,7 +151,40 @@ def _evaluate_instance(
 
     result: dict[Metric, float] = {}
     for metric in eval_metrics:
-        metric_value = metric(ref_arr, pred_arr, voxelspacing=voxelspacing)
+        if _is_spatial_metric(metric) and is_flattened_onehot:
+            # For spatial metrics on flattened one-hot data, reshape back to spatial structure
+            # Reshape full arrays back to (num_classes, *spatial_shape)
+            ref_spatial = _get_orig_onehotcc_structure(
+                reference_arr, num_ref_labels, processing_pair_orig_shape
+            )
+            pred_spatial = _get_orig_onehotcc_structure(
+                prediction_arr, num_ref_labels, processing_pair_orig_shape
+            )
+
+            # Extract the specific instance from the spatial structure
+            ref_spatial_instance = ref_spatial == ref_idx
+            pred_spatial_instance = pred_spatial == ref_idx
+
+            # Crop for performance (only on spatial dimensions)
+            crop = _get_paired_crop(pred_spatial_instance, ref_spatial_instance)
+            ref_spatial_cropped = ref_spatial_instance[crop]
+            pred_spatial_cropped = pred_spatial_instance[crop]
+
+            # Adjust voxelspacing to match spatial array dimensions if needed
+            if len(voxelspacing) < ref_spatial_cropped.ndim:
+                # Extend voxelspacing by prepending 1.0 for non-spatial dimensions (e.g., label dimension)
+                extra_dims = ref_spatial_cropped.ndim - len(voxelspacing)
+                extended_voxelspacing = (1.0,) * extra_dims + tuple(voxelspacing)
+            else:
+                extended_voxelspacing = voxelspacing
+
+            metric_value = metric(
+                ref_spatial_cropped, pred_spatial_cropped, voxelspacing=extended_voxelspacing
+            )
+        else:
+            # For non-spatial metrics or normal arrays, use standard computation
+            metric_value = metric(ref_arr, pred_arr, voxelspacing=voxelspacing)
+
         result[metric] = metric_value
 
     return result
