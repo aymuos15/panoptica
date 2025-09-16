@@ -25,7 +25,7 @@ class PanopticaResult(object):
         prediction_arr: np.ndarray,
         num_pred_instances: int,
         num_ref_instances: int,
-        tp: int,
+        tp: int | float,  # Allow NaN (float) for region-based matching
         list_metrics: dict[Metric, list[float]],
         edge_case_handler: EdgeCaseHandler,
         global_metrics: list[Metric] = [],
@@ -96,7 +96,7 @@ class PanopticaResult(object):
             default_value=num_pred_instances,
             was_calculated=True,
         )
-        self.tp: int
+        self.tp: int | float  # Allow NaN for region-based matching
         self._add_metric(
             "tp",
             MetricType.MATCHING,
@@ -108,28 +108,28 @@ class PanopticaResult(object):
         # endregion
         #
         # region Basic
-        self.fp: int
+        self.fp: int | float  # Allow NaN for region-based matching
         self._add_metric(
             "fp",
             MetricType.MATCHING,
             fp,
             long_name="False Positives",
         )
-        self.fn: int
+        self.fn: int | float  # Allow NaN for region-based matching
         self._add_metric(
             "fn",
             MetricType.MATCHING,
             fn,
             long_name="False Negatives",
         )
-        self.prec: int
+        self.prec: int | float  # Allow NaN for region-based matching
         self._add_metric(
             "prec",
             MetricType.NO_PRINT,
             prec,
             long_name="Precision (positive predictive value)",
         )
-        self.rec: int
+        self.rec: int | float  # Allow NaN for region-based matching
         self._add_metric(
             "rec",
             MetricType.NO_PRINT,
@@ -773,18 +773,26 @@ class PanopticaResult(object):
 
 # region Basic
 def fp(res: PanopticaResult):
+    if np.isnan(res.tp):
+        return np.nan
     return res.num_pred_instances - res.tp
 
 
 def fn(res: PanopticaResult):
+    if np.isnan(res.tp):
+        return np.nan
     return res.num_ref_instances - res.tp
 
 
 def prec(res: PanopticaResult):
+    if np.isnan(res.tp):
+        return np.nan
     return res.tp / (res.tp + res.fp)
 
 
 def rec(res: PanopticaResult):
+    if np.isnan(res.tp):
+        return np.nan
     return res.tp / (res.tp + res.fn)
 
 
@@ -795,6 +803,8 @@ def rq(res: PanopticaResult):
     Returns:
         float: Recognition Quality (RQ).
     """
+    if np.isnan(res.tp):
+        return np.nan
     if res.tp == 0:
         return 0.0 if res.num_pred_instances + res.num_ref_instances > 0 else np.nan
     return res.tp / (res.tp + 0.5 * res.fp + 0.5 * res.fn)

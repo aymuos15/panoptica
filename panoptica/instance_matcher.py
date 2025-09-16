@@ -3,11 +3,13 @@ from dataclasses import dataclass
 from typing import Optional, Tuple, List
 
 import numpy as np
+from scipy.ndimage import distance_transform_edt
 
 from panoptica._functionals import (
     _calc_matching_metric_of_overlapping_labels,
     _calc_matching_metric_of_overlapping_partlabels,
     _map_labels,
+    _connected_components,
 )
 from panoptica.metrics import Metric
 from panoptica.utils.processing_pair import (
@@ -17,6 +19,7 @@ from panoptica.utils.processing_pair import (
 from panoptica.utils.instancelabelmap import InstanceLabelMap
 from panoptica.utils.config import SupportsConfig
 from panoptica.utils.label_group import LabelGroup, LabelPartGroup
+from panoptica.utils.constants import CCABackend
 
 
 @dataclass
@@ -492,4 +495,119 @@ class MaximizeMergeMatching(InstanceMatchingAlgorithm):
         return {
             "matching_metric": node._matching_metric,
             "matching_threshold": node._matching_threshold,
+        }
+
+
+class RegionBasedMatching(InstanceMatchingAlgorithm):
+    """
+    Instance matching algorithm that performs region-based matching using spatial distance.
+
+    This method assigns prediction instances to ground truth regions based on spatial proximity
+    rather than traditional overlap-based metrics. It uses connected components and distance
+    transforms to create region assignments.
+
+    Note: This matching method does not produce traditional count metrics (TP/FP/FN) as it
+    assigns all predictions to regions. Count metrics will be set to NaN.
+
+    Attributes:
+        cca_backend (CCABackend): Backend for connected component analysis.
+    """
+
+    def __init__(
+        self,
+        cca_backend: CCABackend = CCABackend.scipy,
+    ) -> None:
+        """
+        Initialize the RegionBasedMatching instance.
+
+        Args:
+            cca_backend (CCABackend): Backend for connected component analysis.
+        """
+        self._cca_backend = cca_backend
+
+    def _get_gt_regions(self, gt: np.ndarray) -> Tuple[np.ndarray, int]:
+        """
+        Get ground truth regions using connected components and distance transforms.
+
+        Args:
+            gt: Ground truth array
+
+        Returns:
+            Tuple of (region_map, num_features) where region_map assigns each pixel
+            to the closest ground truth region.
+        """
+        # Step 1: Connected Components
+        labeled_array, num_features = _connected_components(gt, self._cca_backend)
+
+        # Step 2: Compute distance transform for each region
+        distance_map = np.full(gt.shape, np.inf, dtype=np.float32)
+        region_map = np.zeros(gt.shape, dtype=np.int32)
+
+        for region_label in range(1, num_features + 1):
+            # Create region mask
+            region_mask = (labeled_array == region_label)
+
+            # Compute distance transform
+            distance = distance_transform_edt(~region_mask)
+
+            # Update pixels where this region is closer
+            update_mask = distance < distance_map
+            distance_map[update_mask] = distance[update_mask]
+            region_map[update_mask] = region_label
+
+        return region_map, num_features
+
+    def _match_instances(
+        self,
+        unmatched_instance_pair: UnmatchedInstancePair,
+        context: Optional[MatchingContext] = None,
+        **kwargs,
+    ) -> InstanceLabelMap:
+        """
+        Perform region-based instance matching.
+
+        Args:
+            unmatched_instance_pair (UnmatchedInstancePair): The unmatched instance pair to be matched.
+            context (Optional[MatchingContext]): The matching context.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            InstanceLabelMap: The result of the region-based matching.
+        """
+        pred_arr = unmatched_instance_pair.prediction_arr
+        ref_arr = unmatched_instance_pair.reference_arr
+        pred_labels = unmatched_instance_pair.pred_labels
+
+        labelmap = InstanceLabelMap()
+
+        if len(pred_labels) == 0:
+            return labelmap
+
+        # Get ground truth regions
+        region_map, num_features = self._get_gt_regions(ref_arr)
+
+        # For each prediction instance, find which ground truth region it belongs to
+        for pred_label in pred_labels:
+            pred_mask = (pred_arr == pred_label)
+
+            # Find the most common region assignment for this prediction instance
+            pred_regions = region_map[pred_mask]
+
+            # Remove background (region 0)
+            pred_regions = pred_regions[pred_regions > 0]
+
+            if len(pred_regions) > 0:
+                # Assign to the most common region
+                unique_regions, counts = np.unique(pred_regions, return_counts=True)
+                most_common_region = unique_regions[np.argmax(counts)]
+
+                # Add to labelmap
+                labelmap.add_labelmap_entry(int(pred_label), int(most_common_region))
+
+        return labelmap
+
+    @classmethod
+    def _yaml_repr(cls, node) -> dict:
+        return {
+            "cca_backend": node._cca_backend,
         }

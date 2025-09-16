@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from panoptica.instance_approximator import InstanceApproximator
 from panoptica.instance_evaluator import evaluate_matched_instance
-from panoptica.instance_matcher import InstanceMatchingAlgorithm
+from panoptica.instance_matcher import InstanceMatchingAlgorithm, RegionBasedMatching
 from panoptica.metrics import Metric
 from panoptica.panoptica_result import PanopticaResult
 from panoptica.utils.timing import measure_time
@@ -442,6 +442,11 @@ def panoptic_evaluate(
             else instance_metadata["original_num_refs"]
         )
 
+        # For region-based matching, set TP to NaN since it doesn't use traditional counting
+        tp_value = processing_pair.tp
+        if isinstance(instance_matcher, RegionBasedMatching):
+            tp_value = np.nan
+
         processing_pair = PanopticaResult(
             reference_arr=processing_pair.reference_arr,
             prediction_arr=processing_pair.prediction_arr,
@@ -450,7 +455,7 @@ def panoptic_evaluate(
             num_ref_instances=final_num_ref_instances,
             num_ref_labels=instance_metadata["num_ref_labels"],
             label_group=label_group,
-            tp=processing_pair.tp,
+            tp=tp_value,
             list_metrics=processing_pair.list_metrics,
             global_metrics=global_metrics,
             edge_case_handler=edge_case_handler,
