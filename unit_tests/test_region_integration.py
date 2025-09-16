@@ -11,6 +11,7 @@ from panoptica.metrics import Metric
 from panoptica.utils.constants import CCABackend
 from panoptica.utils.processing_pair import SemanticPair
 
+
 def create_test_data():
     """Create simple test data with ground truth and prediction instances"""
     # Create a simple 3D volume with 2 GT regions
@@ -31,6 +32,7 @@ def create_test_data():
 
     return gt, pred
 
+
 def test_region_integration():
     """Test RegionBasedMatching with full panoptic evaluation"""
     print("Testing RegionBasedMatching with panoptic_evaluate...")
@@ -49,10 +51,7 @@ def test_region_integration():
 
     try:
         # Create semantic pair
-        semantic_pair = SemanticPair(
-            prediction_arr=pred,
-            reference_arr=gt
-        )
+        semantic_pair = SemanticPair(prediction_arr=pred, reference_arr=gt)
 
         # Run panoptic evaluation
         result = panoptic_evaluate(
@@ -61,7 +60,7 @@ def test_region_integration():
             instance_matcher=matcher,
             instance_metrics=[Metric.DSC, Metric.IOU],
             global_metrics=[Metric.DSC],
-            verbose=True
+            verbose=True,
         )
 
         print(f"\n✅ Integration test successful!")
@@ -81,7 +80,7 @@ def test_region_integration():
             print("⚠️  Expected TP to be NaN for region-based matching")
 
         # Check individual instance metrics
-        if hasattr(result, 'list_metrics') and result.list_metrics:
+        if hasattr(result, "list_metrics") and result.list_metrics:
             print(f"\nInstance metrics:")
             for metric, values in result.list_metrics.items():
                 print(f"  {metric}: {values}")
@@ -91,8 +90,10 @@ def test_region_integration():
     except Exception as e:
         print(f"❌ Error during integration test: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 if __name__ == "__main__":
     success = test_region_integration()

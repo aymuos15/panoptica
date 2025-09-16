@@ -545,7 +545,7 @@ class RegionBasedMatching(InstanceMatchingAlgorithm):
 
         for region_label in range(1, num_features + 1):
             # Create region mask
-            region_mask = (labeled_array == region_label)
+            region_mask = labeled_array == region_label
 
             # Compute distance transform
             distance = distance_transform_edt(~region_mask)
@@ -588,7 +588,7 @@ class RegionBasedMatching(InstanceMatchingAlgorithm):
 
         # For each prediction instance, find which ground truth region it belongs to
         for pred_label in pred_labels:
-            pred_mask = (pred_arr == pred_label)
+            pred_mask = pred_arr == pred_label
 
             # Find the most common region assignment for this prediction instance
             pred_regions = region_map[pred_mask]

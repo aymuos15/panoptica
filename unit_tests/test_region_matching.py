@@ -8,6 +8,7 @@ from panoptica.instance_matcher import RegionBasedMatching
 from panoptica.utils.processing_pair import UnmatchedInstancePair
 from panoptica.utils.constants import CCABackend
 
+
 def create_test_data():
     """Create simple test data with ground truth and prediction instances"""
     # Create a simple 3D volume with 2 GT regions
@@ -28,6 +29,7 @@ def create_test_data():
 
     return gt, pred
 
+
 def test_region_based_matching():
     """Test the RegionBasedMatching algorithm"""
     print("Testing RegionBasedMatching...")
@@ -36,10 +38,7 @@ def test_region_based_matching():
     gt, pred = create_test_data()
 
     # Create unmatched instance pair
-    unmatched_pair = UnmatchedInstancePair(
-        prediction_arr=pred,
-        reference_arr=gt
-    )
+    unmatched_pair = UnmatchedInstancePair(prediction_arr=pred, reference_arr=gt)
 
     print(f"Ground truth labels: {unmatched_pair.ref_labels}")
     print(f"Prediction labels: {unmatched_pair.pred_labels}")
@@ -66,8 +65,10 @@ def test_region_based_matching():
     except Exception as e:
         print(f"Error during matching: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 if __name__ == "__main__":
     success = test_region_based_matching()

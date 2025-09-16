@@ -11,6 +11,7 @@ from panoptica.metrics import Metric
 from panoptica.utils.constants import CCABackend
 from panoptica.utils.processing_pair import SemanticPair
 
+
 def test_scenario_1_basic():
     """Test basic case with non-overlapping regions"""
     print("Test 1: Basic non-overlapping regions")
@@ -27,6 +28,7 @@ def test_scenario_1_basic():
     pred[19:24, 19:24, 3:9] = 2
 
     return gt, pred
+
 
 def test_scenario_2_overlapping():
     """Test case with overlapping predictions"""
@@ -45,6 +47,7 @@ def test_scenario_2_overlapping():
 
     return gt, pred
 
+
 def test_scenario_3_empty_prediction():
     """Test case with no predictions"""
     print("Test 3: Empty predictions")
@@ -57,6 +60,7 @@ def test_scenario_3_empty_prediction():
     gt[20:25, 20:25, 2:8] = 2
 
     return gt, pred
+
 
 def test_scenario_4_extra_predictions():
     """Test case with more predictions than GT regions"""
@@ -74,6 +78,7 @@ def test_scenario_4_extra_predictions():
     pred[30:35, 30:35, 3:9] = 3  # Even farther
 
     return gt, pred
+
 
 def run_test_scenario(gt, pred, scenario_name):
     """Run a test scenario and return results"""
@@ -94,15 +99,17 @@ def run_test_scenario(gt, pred, scenario_name):
             instance_matcher=matcher,
             instance_metrics=[Metric.DSC, Metric.IOU],
             global_metrics=[Metric.DSC],
-            verbose=False
+            verbose=False,
         )
 
         print(f"✅ {scenario_name} successful!")
-        print(f"  Pred instances: {result.num_pred_instances}, Ref instances: {result.num_ref_instances}")
+        print(
+            f"  Pred instances: {result.num_pred_instances}, Ref instances: {result.num_ref_instances}"
+        )
         print(f"  TP: {result.tp}, FP: {result.fp}, FN: {result.fn}")
 
         # Check individual metrics if available
-        if hasattr(result, 'list_metrics') and result.list_metrics:
+        if hasattr(result, "list_metrics") and result.list_metrics:
             for metric, values in result.list_metrics.items():
                 if values:  # Only print if there are values
                     avg_val = np.mean(values) if values else 0
@@ -113,8 +120,10 @@ def run_test_scenario(gt, pred, scenario_name):
     except Exception as e:
         print(f"❌ {scenario_name} failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 def main():
     """Run all test scenarios"""
@@ -144,6 +153,7 @@ def main():
     else:
         print("💥 Some tests failed!")
         return False
+
 
 if __name__ == "__main__":
     main()
