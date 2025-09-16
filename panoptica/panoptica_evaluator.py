@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from panoptica.instance_approximator import InstanceApproximator
 from panoptica.instance_evaluator import evaluate_matched_instance
-from panoptica.instance_matcher import InstanceMatchingAlgorithm, RegionBasedMatching
+from panoptica.instance_matcher import InstanceMatchingAlgorithm
 from panoptica.metrics import Metric
 from panoptica.panoptica_result import PanopticaResult
 from panoptica.utils.timing import measure_time
@@ -444,7 +444,7 @@ def panoptic_evaluate(
 
         # For region-based matching, set TP to NaN since it doesn't use traditional counting
         tp_value = processing_pair.tp
-        if isinstance(instance_matcher, RegionBasedMatching):
+        if instance_matcher.__class__.__name__ == "RegionBasedMatching":
             tp_value = np.nan
 
         processing_pair = PanopticaResult(
