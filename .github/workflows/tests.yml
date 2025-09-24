@@ -65,7 +65,7 @@ jobs:
           python -m pip install poetry
       - name: Install dependencies with GPU extras
         run: |
-          python -m poetry install --extras gpu || python -m poetry install
+          python -m poetry install --extras "gpu test" || python -m poetry install --extras test
       - name: Test CUDA functionality (CPU fallback)
         run: |
           python -m poetry run pytest unit_tests/test_cupy_connected_components.py -v
