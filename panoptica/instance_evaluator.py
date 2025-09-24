@@ -133,16 +133,24 @@ def _evaluate_instance(
     pred_arr = pred_arr[crop]
 
     result: dict[Metric, float] = {}
+
+    # Cache spatial structures if any metric requires them and is_flattened_onehot is True
+    needs_spatial = any(
+        metric.requires_spatial and is_flattened_onehot for metric in eval_metrics
+    )
+    ref_spatial = pred_spatial = None
+    if needs_spatial:
+        # Reshape full arrays back to (num_classes, *spatial_shape) only once
+        ref_spatial = _get_orig_onehotcc_structure(
+            reference_arr, num_ref_labels, processing_pair_orig_shape
+        )
+        pred_spatial = _get_orig_onehotcc_structure(
+            prediction_arr, num_ref_labels, processing_pair_orig_shape
+        )
+
     for metric in eval_metrics:
         if metric.requires_spatial and is_flattened_onehot:
-            # For spatial metrics on flattened one-hot data, reshape back to spatial structure
-            # Reshape full arrays back to (num_classes, *spatial_shape)
-            ref_spatial = _get_orig_onehotcc_structure(
-                reference_arr, num_ref_labels, processing_pair_orig_shape
-            )
-            pred_spatial = _get_orig_onehotcc_structure(
-                prediction_arr, num_ref_labels, processing_pair_orig_shape
-            )
+            # For spatial metrics on flattened one-hot data, use cached spatial structure
 
             # Extract the specific instance from the spatial structure
             ref_spatial_instance = ref_spatial == ref_idx
@@ -155,7 +163,10 @@ def _evaluate_instance(
 
             # Adjust voxelspacing to match spatial array dimensions if needed
             if len(voxelspacing) < ref_spatial_cropped.ndim:
-                # The first dimension is the label dimension from reshaping, which needs spacing 1.0
+                # After reshaping from flattened one-hot, arrays have shape (num_labels+1, *spatial_shape)
+                # The instance extraction preserves this shape as a boolean mask
+                # Spatial metrics require voxelspacing for ALL dimensions, so we prepend 1.0
+                # for the non-spatial label dimension(s)
                 extra_dims = ref_spatial_cropped.ndim - len(voxelspacing)
                 extended_voxelspacing = (1.0,) * extra_dims + tuple(voxelspacing)
             elif len(voxelspacing) > ref_spatial_cropped.ndim:
