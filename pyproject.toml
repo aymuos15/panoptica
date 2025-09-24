@@ -17,7 +17,7 @@ authors = [
     { name = "Florian Kofler", email = "florian.kofler@tum.de" },
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<4.0"
 license = { file = "LICENSE" }
 keywords = ["panoptic", "quality", "segmentation", "medical imaging"]
 classifiers = [
