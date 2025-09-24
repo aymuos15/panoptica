@@ -1,17 +1,25 @@
 import numpy as np
 from importlib.util import find_spec
 from pathlib import Path
+from typing import Union, TYPE_CHECKING
 from panoptica.utils.input_check_and_conversion.check_numpy_array import (
     sanity_checker_numpy_array,
 )
 
-# Optional sitk import
+# Optional torch import
 _spec = find_spec("torch")
 if _spec is not None:
     import torch
+else:
+    torch = None
+
+if TYPE_CHECKING:
+    import torch
 
 
-def load_torch_image(image_path: str | Path) -> torch.Tensor:
+def load_torch_image(image_path: Union[str, Path]):
+    if torch is None:
+        raise ImportError("torch is not available. Please install torch to use this functionality.")
     try:
         image = torch.load(
             image_path,
@@ -25,9 +33,9 @@ def load_torch_image(image_path: str | Path) -> torch.Tensor:
 
 
 def sanity_checker_torch_image(
-    prediction_image: torch.Tensor | str | Path,
-    reference_image: torch.Tensor | str | Path,
-) -> tuple[bool, tuple[np.ndarray, np.ndarray] | str]:
+    prediction_image: Union["torch.Tensor", str, Path],
+    reference_image: Union["torch.Tensor", str, Path],
+) -> tuple[bool, Union[tuple[np.ndarray, np.ndarray], str]]:
     """
     This function performs sanity check on 2 Torch tensors by converting them to numpy arrays and using that check.
 
@@ -38,6 +46,9 @@ def sanity_checker_torch_image(
     Returns:
         tuple[bool, tuple[np.ndarray, np.ndarray] | str]: A tuple where the first element is a boolean indicating if the images pass the sanity check, and the second element is either the numpy arrays of the images or an error message.
     """
+    if torch is None:
+        raise ImportError("torch is not available. Please install torch to use this functionality.")
+
     # load if necessary
     if isinstance(prediction_image, (str, Path)):
         prediction_image = load_torch_image(prediction_image)
