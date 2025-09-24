@@ -6,23 +6,6 @@ from panoptica.utils.processing_pair import MatchedInstancePair, EvaluateInstanc
 from panoptica._functionals import _get_paired_crop, _get_orig_onehotcc_structure
 
 
-def _is_spatial_metric(metric: Metric) -> bool:
-    """
-    Check if a metric requires spatial structure for meaningful computation.
-
-    Spatial metrics need to operate on arrays with spatial dimensions (not flattened)
-    to compute distances, surfaces, or geometric properties correctly.
-
-    Args:
-        metric: The metric to check
-
-    Returns:
-        bool: True if the metric requires spatial structure
-    """
-    spatial_metrics = {Metric.ASSD, Metric.HD, Metric.HD95, Metric.NSD, Metric.CEDI}
-    return metric in spatial_metrics
-
-
 def evaluate_matched_instance(
     matched_instance_pair: MatchedInstancePair,
     eval_metrics: list[Metric] = [Metric.DSC, Metric.IOU, Metric.ASSD],
@@ -151,7 +134,7 @@ def _evaluate_instance(
 
     result: dict[Metric, float] = {}
     for metric in eval_metrics:
-        if _is_spatial_metric(metric) and is_flattened_onehot:
+        if metric.requires_spatial and is_flattened_onehot:
             # For spatial metrics on flattened one-hot data, reshape back to spatial structure
             # Reshape full arrays back to (num_classes, *spatial_shape)
             ref_spatial = _get_orig_onehotcc_structure(
@@ -172,14 +155,22 @@ def _evaluate_instance(
 
             # Adjust voxelspacing to match spatial array dimensions if needed
             if len(voxelspacing) < ref_spatial_cropped.ndim:
-                # Extend voxelspacing by prepending 1.0 for non-spatial dimensions (e.g., label dimension)
+                # The first dimension is the label dimension from reshaping, which needs spacing 1.0
                 extra_dims = ref_spatial_cropped.ndim - len(voxelspacing)
                 extended_voxelspacing = (1.0,) * extra_dims + tuple(voxelspacing)
+            elif len(voxelspacing) > ref_spatial_cropped.ndim:
+                raise ValueError(
+                    f"Voxelspacing has {len(voxelspacing)} dimensions but the spatial array "
+                    f"only has {ref_spatial_cropped.ndim} dimensions. Voxelspacing should match "
+                    f"the original spatial dimensions of the data."
+                )
             else:
                 extended_voxelspacing = voxelspacing
 
             metric_value = metric(
-                ref_spatial_cropped, pred_spatial_cropped, voxelspacing=extended_voxelspacing
+                ref_spatial_cropped,
+                pred_spatial_cropped,
+                voxelspacing=extended_voxelspacing,
             )
         else:
             # For non-spatial metrics or normal arrays, use standard computation
