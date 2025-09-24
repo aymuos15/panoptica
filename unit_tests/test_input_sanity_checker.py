@@ -16,6 +16,7 @@ from importlib.util import find_spec
 _spec = find_spec("torch")
 if _spec is not None:
     import torch
+
     HAS_TORCH = True
 else:
     torch = None

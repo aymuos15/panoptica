@@ -19,7 +19,9 @@ if TYPE_CHECKING:
 
 def load_torch_image(image_path: Union[str, Path]):
     if torch is None:
-        raise ImportError("torch is not available. Please install torch to use this functionality.")
+        raise ImportError(
+            "torch is not available. Please install torch to use this functionality."
+        )
     try:
         image = torch.load(
             image_path,
@@ -47,7 +49,9 @@ def sanity_checker_torch_image(
         tuple[bool, tuple[np.ndarray, np.ndarray] | str]: A tuple where the first element is a boolean indicating if the images pass the sanity check, and the second element is either the numpy arrays of the images or an error message.
     """
     if torch is None:
-        raise ImportError("torch is not available. Please install torch to use this functionality.")
+        raise ImportError(
+            "torch is not available. Please install torch to use this functionality."
+        )
 
     # load if necessary
     if isinstance(prediction_image, (str, Path)):
